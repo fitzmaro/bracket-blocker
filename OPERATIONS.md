@@ -48,25 +48,11 @@ If games aren't showing:
 
 ---
 
-## 📧 Resend Domain Setup (bracketblocker.com)
+## 📧 Resend Domain Setup
 
-### DNS Records to Add in Namecheap
+✅ **DONE** - Domain verified: `contact.bracketblocker.com`
 
-You need to add these records in Namecheap DNS settings. Resend will give you the exact values.
-
-| Type | Host | Value |
-|------|------|-------|
-| TXT | @ | Resend verification code |
-| TXT | resend._domainkey | DKIM key from Resend |
-| MX | send | feedback-smtp.us-east-1.amazonses.com (priority 10) |
-
-### Steps:
-1. Log into Resend → Domains → Add Domain → Enter `bracketblocker.com`
-2. Resend shows you DNS records to add
-3. Log into Namecheap → Domain List → bracketblocker.com → Advanced DNS
-4. Add each record Resend shows
-5. Wait 5-30 minutes for DNS to propagate
-6. Click "Verify" in Resend
+Emails send from: `notifications@contact.bracketblocker.com`
 
 ---
 

@@ -13,7 +13,7 @@ export type Subscriber = {
  */
 export async function sendBracketDropEmail(to: string) {
   const { data, error } = await resend.emails.send({
-    from: 'Bracket Blocker <notifications@bracketblocker.com>', // You'll need to verify this domain in Resend
+    from: 'Bracket Blocker <notifications@contact.bracketblocker.com>', // You'll need to verify this domain in Resend
     to,
     subject: '🏀 The Bracket is LIVE - Block Your Calendar Now!',
     html: `
@@ -64,7 +64,7 @@ export async function sendBracketDropEmail(to: string) {
  */
 export async function sendWelcomeEmail(to: string) {
   const { data, error } = await resend.emails.send({
-    from: 'Bracket Blocker <notifications@bracketblocker.com>',
+    from: 'Bracket Blocker <notifications@contact.bracketblocker.com>',
     to,
     subject: "You're in! Bracket alerts are set up 🏀",
     html: `
