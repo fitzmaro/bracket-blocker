@@ -48,11 +48,18 @@ If games aren't showing:
 
 ---
 
-## 📧 Resend Domain Setup
+## 📧 Email Setup
 
+### Transactional emails (Resend)
 ✅ **DONE** - Domain verified: `contact.bracketblocker.com`
+- Sends from: `notifications@contact.bracketblocker.com`
+- Used for: welcome emails, bracket drop notifications
 
-Emails send from: `notifications@contact.bracketblocker.com`
+### Personal inbox (Gmail)
+✅ **DONE** - `hello@bracketblocker.com`
+- Receiving: Namecheap email forwarding → Gmail
+- Sending: Gmail "Send mail as" with Resend SMTP
+- SMTP: `smtp.resend.com` port `587`, username `resend`, password = Resend API key
 
 ---
 
