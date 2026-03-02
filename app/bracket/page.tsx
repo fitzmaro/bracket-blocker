@@ -378,8 +378,8 @@ function PlaceholderGameCard({ game, onClick }: { game: Game; onClick: () => voi
 
       {/* Coming soon overlay for TBD games */}
       {!isAvailable && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs text-zinc-600 uppercase tracking-wider">Selection Sunday</span>
+        <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0c]/90 rounded-lg">
+          <span className="text-xs text-zinc-500 uppercase tracking-wider">Selection Sunday</span>
         </div>
       )}
     </div>
