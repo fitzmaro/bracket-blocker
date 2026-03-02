@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Shuffle, Check, Calendar, Trash2 } from 'lucide-react';
@@ -191,7 +191,7 @@ function GameRow({
    MAIN CHECKOUT PAGE
    ========================================== */
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams();
   const [games, setGames] = useState<GameSelection[]>([]);
   const [added, setAdded] = useState(false);
@@ -422,5 +422,17 @@ export default function CheckoutPage() {
         </div>
       </main>
     </>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-zinc-500">Loading...</div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
