@@ -192,15 +192,36 @@ function SelectionSundayBanner() {
 function EmailCapture() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [showTeamPicker, setShowTeamPicker] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      // TODO: Send to backend/email service
-      console.log('Email signup:', email, 'Teams:', selectedTeams);
-      setSubmitted(true);
+    if (!email) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, conferences: selectedTeams }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        setError(data.error || 'Something went wrong');
+      }
+    } catch {
+      setError('Failed to subscribe. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -242,11 +263,16 @@ function EmailCapture() {
             />
             <button
               type="submit"
-              className="px-6 py-3 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-colors uppercase tracking-wider"
+              disabled={loading}
+              className="px-6 py-3 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-colors uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Notify Me
+              {loading ? 'Subscribing...' : 'Notify Me'}
             </button>
           </div>
+
+          {error && (
+            <p className="text-red-400 text-sm">{error}</p>
+          )}
 
           {/* Optional: Team preference picker */}
           <button
