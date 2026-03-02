@@ -235,6 +235,9 @@ function EmailCapture() {
         <p className="text-zinc-400">
           We'll email you the moment the bracket drops on Selection Sunday.
         </p>
+        <p className="text-zinc-500 text-sm mt-2">
+          Check your spam folder if you don't see the confirmation email.
+        </p>
       </div>
     );
   }
