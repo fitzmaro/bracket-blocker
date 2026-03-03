@@ -16,11 +16,10 @@ Last updated: March 2, 2026
 - `/checkout` - Multi-game alibi assignment, Google Calendar / Outlook buttons
 - `/demo` - Demo flow with fake Duke vs UNC game
 
-### Email - Receiving (Testing)
-- **hello@bracketblocker.com** forwards to Gmail via ImprovMX
-- MX records verified: `mx1.improvmx.com` (10), `mx2.improvmx.com` (20)
-- SPF record added: `v=spf1 include:spf.improvmx.com ~all`
-- Test after DNS propagation (initial test bounced due to DNS cache)
+### Email - Fully Working ✅
+- **Receiving**: hello@bracketblocker.com → Gmail via ImprovMX
+- **Sending**: Gmail "Send mail as" hello@bracketblocker.com via Resend SMTP
+- **Transactional**: notifications@bracketblocker.com via Resend API
 
 ### API Keys (in Vercel)
 - `BALLDONTLIE_API_KEY` - for NCAA tournament data
@@ -53,7 +52,7 @@ Once ImprovMX forwarding is confirmed working:
 - [x] Update code to send from `notifications@bracketblocker.com` - DONE
 - [ ] Build admin endpoint for sending bracket drop email blast
 - [ ] Swap local JSON subscriber storage to Vercel KV
-- [ ] Confirm ImprovMX email forwarding is working
+- [x] Email forwarding + Gmail Send As - DONE
 
 ### Nice to Have
 - [ ] Test email deliverability (currently going to spam - new domain)
