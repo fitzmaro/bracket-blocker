@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Oswald, Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const oswald = Oswald({
@@ -15,8 +16,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Bracket Blocker | March Madness Work Invites",
-  description: "Generate fake work calendar invites for March Madness games.",
+  title: "Bracket Blocker | NCAA Tournament Calendar Invites",
+  description: "Generate fake work calendar invites for NCAA Tournament games.",
 };
 
 export default function RootLayout({
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${oswald.variable} ${inter.variable} bg-arena-black min-h-screen antialiased overflow-x-hidden`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );

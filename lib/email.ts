@@ -82,7 +82,7 @@ export async function sendWelcomeEmail(to: string) {
 
         <p style="color: #444; font-size: 16px; line-height: 1.6;">
           Be ready to block your calendar before anyone notices. Your boss will think you're in
-          back-to-back meetings. You'll be watching March Madness.
+          back-to-back meetings. You'll be watching the tournament.
         </p>
 
         <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">

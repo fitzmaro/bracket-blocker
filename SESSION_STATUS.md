@@ -41,7 +41,7 @@ Once ImprovMX forwarding is confirmed working:
 4. SMTP Server: `smtp.resend.com`
 5. Port: `587`
 6. Username: `resend`
-7. Password: `re_AhD9w9T3_2XtDGZhcDk14xyAqyR3GMxwm` (Resend API key)
+7. Password: your Resend API key (from Vercel dashboard)
 
 ---
 
@@ -84,13 +84,11 @@ lib/
 ## Credentials Location
 
 **Local** (`.env.local` - not committed):
-```
-BALLDONTLIE_API_KEY=fd36e4f1-11ff-44db-83e5-6e7434a6c2bd
-RESEND_API_KEY=re_AhD9w9T3_2XtDGZhcDk14xyAqyR3GMxwm
-```
+- `BALLDONTLIE_API_KEY` - get from Vercel dashboard
+- `RESEND_API_KEY` - get from Vercel dashboard
 
 **Production** (Vercel dashboard → Settings → Environment Variables):
-Same keys added there.
+Keys stored securely there. Never commit API keys to git.
 
 ---
 

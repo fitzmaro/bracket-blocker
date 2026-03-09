@@ -47,10 +47,7 @@ lib/
 
 ## API Configuration
 
-Ball Don't Lie API key is in `.env.local`:
-```
-BALLDONTLIE_API_KEY=fd36e4f1-11ff-44db-83e5-6e7434a6c2bd
-```
+API keys are stored in `.env.local` (never commit) and Vercel dashboard.
 
 Key endpoints:
 - `GET /api/games?tournament=true&season=2026` - Tournament games

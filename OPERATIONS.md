@@ -76,11 +76,11 @@ If you need to change it, search the codebase for `YOUTUBE_TV_REFERRAL`.
 
 ## 🔑 API Keys Location
 
-All in `.env.local` (never commit this file):
-```
-BALLDONTLIE_API_KEY=fd36e4f1-...
-RESEND_API_KEY=re_AhD9w9T3_...
-```
+All in `.env.local` (never commit) and Vercel dashboard → Settings → Environment Variables.
+
+Keys needed:
+- `BALLDONTLIE_API_KEY`
+- `RESEND_API_KEY`
 
 ---
 

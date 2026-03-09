@@ -21,12 +21,6 @@ const ROUNDS = [
   { name: 'Championship', shortName: 'CHIP', gamesPerRegion: 0.25 },
 ];
 
-// Conference filter options
-const CONFERENCES = [
-  'ACC', 'Big 12', 'Big East', 'Big Ten', 'Pac-12', 'SEC', 'American', 'Atlantic 10',
-  'Mountain West', 'West Coast', 'Missouri Valley', 'Colonial', 'Other'
-];
-
 // Placeholder game structure
 type Game = {
   id: string;
@@ -194,8 +188,6 @@ function EmailCapture() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [showTeamPicker, setShowTeamPicker] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,10 +197,15 @@ function EmailCapture() {
     setError('');
 
     try {
+      // Get honeypot values (should be empty for real users)
+      const form = e.target as HTMLFormElement;
+      const website = (form.elements.namedItem('website') as HTMLInputElement)?.value;
+      const company = (form.elements.namedItem('company') as HTMLInputElement)?.value;
+
       const response = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, conferences: selectedTeams }),
+        body: JSON.stringify({ email, website, company }),
       });
 
       const data = await response.json();
@@ -251,10 +248,15 @@ function EmailCapture() {
         </h3>
         <p className="text-zinc-400 mb-6">
           Be the first to block your calendar when the bracket is announced.
-          We'll send game times the moment they're live.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit}>
+          {/* Honeypot fields - hidden from humans, bots fill them */}
+          <div className="absolute -left-[9999px]" aria-hidden="true">
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+            <input type="text" name="company" tabIndex={-1} autoComplete="off" />
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="email"
@@ -274,46 +276,7 @@ function EmailCapture() {
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
-
-          {/* Optional: Team preference picker */}
-          <button
-            type="button"
-            onClick={() => setShowTeamPicker(!showTeamPicker)}
-            className="text-sm text-zinc-500 hover:text-[var(--led-amber)] transition-colors"
-          >
-            {showTeamPicker ? 'Hide team preferences' : '+ Add favorite teams (optional)'}
-          </button>
-
-          {showTeamPicker && (
-            <div className="pt-4 border-t border-zinc-800">
-              <p className="text-xs text-zinc-500 mb-3 uppercase tracking-wider">
-                Select conferences to follow
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {CONFERENCES.map(conf => (
-                  <button
-                    key={conf}
-                    type="button"
-                    onClick={() => {
-                      setSelectedTeams(prev =>
-                        prev.includes(conf)
-                          ? prev.filter(c => c !== conf)
-                          : [...prev, conf]
-                      );
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                      selectedTeams.includes(conf)
-                        ? 'bg-[var(--led-amber)] text-black'
-                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                    }`}
-                  >
-                    {conf}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <p className="text-red-400 text-sm mt-3">{error}</p>
           )}
         </form>
 
