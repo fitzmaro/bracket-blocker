@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { ChevronRight, Filter, X, Mail, Bell, Check } from 'lucide-react';
+import { ChevronRight, Filter, X, Bell, Check, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 /* ==========================================
@@ -146,8 +146,8 @@ function SelectionSundayBanner() {
   const diff = selectionSunday.getTime() - now.getTime();
   const days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
 
-  const scrollToEmailCapture = () => {
-    document.getElementById('email-capture')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToReminder = () => {
+    document.getElementById('selection-reminder')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -168,11 +168,11 @@ function SelectionSundayBanner() {
           </p>
         </div>
         <button
-          onClick={scrollToEmailCapture}
+          onClick={scrollToReminder}
           className="flex items-center gap-2 px-6 py-3 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-all uppercase tracking-wider text-sm shadow-lg hover:shadow-[0_0_20px_rgba(255,150,0,0.4)]"
         >
-          <Bell className="w-4 h-4" />
-          Get Notified When It Drops
+          <Calendar className="w-4 h-4" />
+          Add Reminder to Calendar
         </button>
       </div>
     </div>
@@ -183,105 +183,60 @@ function SelectionSundayBanner() {
    EMAIL CAPTURE
    ========================================== */
 
-function EmailCapture() {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+function SelectionSundayReminder() {
+  // Selection Sunday: March 15, 2026 at 6:00 PM ET
+  const eventTitle = "NCAA Tournament Bracket is LIVE - Block Your Calendar!";
+  const eventDescription = `The 2026 NCAA Tournament bracket has been announced!
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
+Go to Bracket Blocker now to block your calendar before your boss schedules meetings during the games:
+https://bracketblocker.com/bracket
 
-    setLoading(true);
-    setError('');
+First games tip off Thursday. Don't wait!`;
 
-    try {
-      // Get honeypot values (should be empty for real users)
-      const form = e.target as HTMLFormElement;
-      const website = (form.elements.namedItem('website') as HTMLInputElement)?.value;
-      const company = (form.elements.namedItem('company') as HTMLInputElement)?.value;
+  const startDate = "20260315T180000";  // 6:00 PM ET
+  const endDate = "20260315T183000";    // 6:30 PM (30 min reminder)
 
-      const response = await fetch('/api/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, website, company }),
-      });
+  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(eventDescription)}&ctz=America/New_York`;
 
-      const data = await response.json();
-
-      if (data.success) {
-        setSubmitted(true);
-      } else {
-        setError(data.error || 'Something went wrong');
-      }
-    } catch {
-      setError('Failed to subscribe. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (submitted) {
-    return (
-      <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-8 text-center">
-        <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-          <Check className="w-6 h-6 text-green-400" />
-        </div>
-        <h3 className="text-xl font-bold text-white mb-2 font-[var(--font-oswald)]">You're In!</h3>
-        <p className="text-zinc-400">
-          We'll email you the moment the bracket drops on Selection Sunday.
-        </p>
-        <p className="text-zinc-500 text-sm mt-2">
-          Check your spam folder if you don't see the confirmation email.
-        </p>
-      </div>
-    );
-  }
+  const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?subject=${encodeURIComponent(eventTitle)}&body=${encodeURIComponent(eventDescription)}&startdt=2026-03-15T18:00:00-04:00&enddt=2026-03-15T18:30:00-04:00`;
 
   return (
     <div className="bg-[var(--arena-panel)] border border-white/10 rounded-xl p-8">
       <div className="max-w-xl mx-auto text-center">
-        <Mail className="w-10 h-10 text-[var(--led-amber)] mx-auto mb-4" />
+        <Bell className="w-10 h-10 text-[var(--led-amber)] mx-auto mb-4" />
         <h3 className="text-2xl font-bold text-white mb-2 font-[var(--font-oswald)] uppercase">
-          Get Notified on Selection Sunday
+          Don't Miss Selection Sunday
         </h3>
-        <p className="text-zinc-400 mb-6">
-          Be the first to block your calendar when the bracket is announced.
+        <p className="text-zinc-400 mb-2">
+          March 15, 2026 at 6:00 PM ET
+        </p>
+        <p className="text-zinc-500 text-sm mb-6">
+          Add a reminder to your calendar. When the bracket drops, you'll be ready to block your schedule.
         </p>
 
-        <form onSubmit={handleSubmit}>
-          {/* Honeypot fields - hidden from humans, bots fill them */}
-          <div className="absolute -left-[9999px]" aria-hidden="true">
-            <input type="text" name="website" tabIndex={-1} autoComplete="off" />
-            <input type="text" name="company" tabIndex={-1} autoComplete="off" />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email..."
-              required
-              className="flex-1 px-4 py-3 bg-[#111115] border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--led-amber)] transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-3 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-colors uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Subscribing...' : 'Notify Me'}
-            </button>
-          </div>
-
-          {error && (
-            <p className="text-red-400 text-sm mt-3">{error}</p>
-          )}
-        </form>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <a
+            href={googleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-3 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-colors uppercase tracking-wider flex items-center justify-center gap-2"
+          >
+            <Calendar className="w-4 h-4" />
+            Google Calendar
+          </a>
+          <a
+            href={outlookUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white font-bold rounded-lg transition-colors uppercase tracking-wider flex items-center justify-center gap-2"
+          >
+            <Calendar className="w-4 h-4" />
+            Outlook
+          </a>
+        </div>
 
         <p className="text-xs text-zinc-600 mt-4">
-          No spam, just bracket alerts. Unsubscribe anytime.
+          You'll get a calendar reminder when the bracket is announced.
         </p>
       </div>
     </div>
@@ -515,9 +470,9 @@ export default function BracketPage() {
             </div>
           </div>
 
-          {/* Email Capture */}
-          <div id="email-capture">
-            <EmailCapture />
+          {/* Selection Sunday Reminder */}
+          <div id="selection-reminder">
+            <SelectionSundayReminder />
           </div>
 
           {/* Info text */}
