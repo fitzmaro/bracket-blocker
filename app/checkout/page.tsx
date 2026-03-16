@@ -197,26 +197,45 @@ function CheckoutContent() {
   const [added, setAdded] = useState(false);
   const [calendarType, setCalendarType] = useState<'google' | 'outlook' | null>(null);
 
-  // Parse game IDs from URL and create placeholder games
-  // In production, this would fetch real game data from the API
+  // Parse game data from URL params
   useEffect(() => {
-    const gameIds = searchParams.get('games')?.split(',') || [];
+    const id = searchParams.get('id');
+    const team1 = searchParams.get('team1');
+    const team2 = searchParams.get('team2');
+    const date = searchParams.get('date') || '';
+    const time = searchParams.get('time') || '';
 
-    // For now, create placeholder games
-    // After Selection Sunday, this will fetch real data
-    const placeholderGames: GameSelection[] = gameIds.map((id, index) => ({
+    if (!id || !team1 || !team2) {
+      setGames([]);
+      return;
+    }
+
+    // Parse time to create a start date (approximate)
+    // Format: "12:15 PM ET" -> extract hour
+    let startTime = new Date();
+    const timeMatch = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (timeMatch) {
+      let hour = parseInt(timeMatch[1]);
+      const min = parseInt(timeMatch[2]);
+      const ampm = timeMatch[3].toUpperCase();
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      startTime.setHours(hour, min, 0, 0);
+    }
+
+    const game: GameSelection = {
       id,
-      team1: 'Team A',
-      team2: 'Team B',
-      date: 'March 20, 2026',
-      time: '2:00 PM ET',
+      team1,
+      team2,
+      date,
+      time,
       alibi: '',
       description: '',
-      startTime: new Date('2026-03-20T14:00:00-04:00'),
-      duration: 3,
-    }));
+      startTime,
+      duration: 3, // Games are ~3 hours
+    };
 
-    setGames(placeholderGames);
+    setGames([game]);
   }, [searchParams]);
 
   const handleUpdateAlibi = (gameId: string, alibi: string) => {
@@ -308,11 +327,11 @@ function CheckoutContent() {
               ← Back to Bracket
             </Link>
             <h1 className="text-3xl md:text-4xl font-bold font-[var(--font-oswald)] uppercase">
-              <span className="text-[var(--led-amber)] led-text">Block</span>{' '}
-              <span className="text-white">{games.length} Game{games.length > 1 ? 's' : ''}</span>
+              <span className="text-[var(--led-amber)] led-text">Choose Your</span>{' '}
+              <span className="text-white">Alibi</span>
             </h1>
             <p className="text-zinc-500 mt-2">
-              Choose alibis for each game. Your boss will see these meeting names.
+              Your boss will never know.
             </p>
           </div>
 

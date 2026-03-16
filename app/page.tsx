@@ -1,69 +1,6 @@
-"use client";
-
-import { useState, useEffect } from 'react';
 import { ChevronRight, Calendar, Shield, Check, Play } from 'lucide-react';
 import Link from 'next/link';
 
-/* ==========================================
-   COUNTDOWN
-   ========================================== */
-
-function CountdownDigit({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="flex flex-col items-center">
-      <div className="countdown-digit w-14 h-16 sm:w-16 sm:h-20 md:w-20 md:h-24 flex items-center justify-center">
-        <span className="text-2xl sm:text-3xl md:text-5xl font-bold text-[var(--led-amber)] led-text font-[var(--font-oswald)] tabular-nums">
-          {value}
-        </span>
-      </div>
-      <span className="text-[9px] md:text-[10px] text-zinc-500 mt-2 uppercase tracking-widest font-[var(--font-oswald)]">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function Countdown() {
-  const [time, setTime] = useState({ d: '--', h: '--', m: '--', s: '--' });
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const target = new Date('2026-03-19T12:00:00-04:00').getTime();
-
-    const tick = () => {
-      const diff = target - Date.now();
-      if (diff > 0) {
-        setTime({
-          d: String(Math.floor(diff / 86400000)).padStart(2, '0'),
-          h: String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0'),
-          m: String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0'),
-          s: String(Math.floor((diff % 60000) / 1000)).padStart(2, '0'),
-        });
-      }
-    };
-
-    tick();
-    const i = setInterval(tick, 1000);
-    return () => clearInterval(i);
-  }, []);
-
-  if (!mounted) return null;
-
-  return (
-    <div className="flex items-center justify-center gap-2 md:gap-3">
-      <CountdownDigit value={time.d} label="Days" />
-      <span className="text-xl sm:text-2xl md:text-4xl text-[var(--led-amber)] led-text font-bold mb-5">:</span>
-      <CountdownDigit value={time.h} label="Hours" />
-      <span className="text-xl sm:text-2xl md:text-4xl text-[var(--led-amber)] led-text font-bold mb-5">:</span>
-      <CountdownDigit value={time.m} label="Min" />
-      <span className="text-xl sm:text-2xl md:text-4xl text-[var(--led-amber)] led-text font-bold mb-5 hidden sm:block">:</span>
-      <div className="hidden sm:block">
-        <CountdownDigit value={time.s} label="Sec" />
-      </div>
-    </div>
-  );
-}
 
 /* ==========================================
    AD PANEL (Desktop side panels)
@@ -96,6 +33,7 @@ Best,
 [Your name]`);
 
 const AD_MAILTO = `mailto:hello@bracketblocker.com?subject=${AD_EMAIL_SUBJECT}&body=${AD_EMAIL_BODY}`;
+
 
 function AdPanel({ side }: { side: 'left' | 'right' }) {
   return (
@@ -179,10 +117,10 @@ export default function Home() {
 
                       {/* Live badge */}
                       <div className="flex justify-center mb-8">
-                        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/50 border border-[var(--led-red)]/30">
-                          <span className="w-2 h-2 rounded-full bg-[var(--led-red)] animate-pulse-glow"></span>
-                          <span className="text-[10px] md:text-xs uppercase tracking-widest text-[var(--led-red)] font-bold font-[var(--font-oswald)]">
-                            Live • NCAA Tournament 2026
+                        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/50 border border-green-500/30">
+                          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse-glow"></span>
+                          <span className="text-[10px] md:text-xs uppercase tracking-widest text-green-400 font-bold font-[var(--font-oswald)]">
+                            Bracket Live • NCAA Tournament 2026
                           </span>
                         </div>
                       </div>
@@ -205,24 +143,18 @@ export default function Home() {
                         </span>
                       </p>
 
-                      {/* Countdown */}
-                      <div className="mb-10">
-                        <p className="text-center text-[10px] uppercase tracking-widest text-zinc-500 mb-4 font-[var(--font-oswald)]">
-                          Tournament Starts In
-                        </p>
-                        <Countdown />
-                      </div>
-
                       {/* CTA */}
-                      <div className="flex flex-col items-center">
-                        <Link href="/bracket" className="btn-glow px-8 md:px-12 py-4 flex items-center gap-2 cursor-pointer">
-                          <span className="text-lg md:text-xl font-bold uppercase tracking-wider text-[var(--led-amber)] led-text font-[var(--font-oswald)]">
-                            Build Your Bracket
-                          </span>
-                          <ChevronRight className="w-5 h-5 text-[var(--led-amber)]" />
+                      <div className="flex flex-col items-center relative z-[100]">
+                        <Link
+                          href="/bracket"
+                          className="btn-glow px-8 md:px-12 py-4 flex items-center gap-2 cursor-pointer relative z-[100] text-lg md:text-xl font-bold uppercase tracking-wider text-[var(--led-amber)] led-text font-[var(--font-oswald)] no-underline"
+                        >
+                          <Calendar className="w-5 h-5" />
+                          View Bracket & Block Calendar
+                          <ChevronRight className="w-5 h-5" />
                         </Link>
                         <span className="text-[10px] md:text-xs text-zinc-600 mt-3 uppercase tracking-widest">
-                          Free • No signup needed
+                          Tournament starts March 19
                         </span>
                       </div>
 
@@ -246,6 +178,37 @@ export default function Home() {
           {/* Bottom Mobile/Tablet Ad Banner */}
           <AdBanner />
 
+        </section>
+
+        {/* ===== BRACKET IS LIVE ===== */}
+        <section id="bracket-live" className="py-16 px-4 bg-gradient-to-b from-[var(--arena-black)] to-[var(--arena-dark)] border-t border-b border-green-500/20">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/30 mb-6">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              <span className="text-sm text-green-400 font-bold uppercase tracking-wider">
+                Bracket is Live
+              </span>
+            </div>
+
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 font-[var(--font-oswald)] uppercase">
+              <span className="text-white">The Tournament </span>
+              <span className="text-[var(--led-amber)]">Starts Now</span>
+            </h2>
+
+            <p className="text-zinc-400 mb-8 max-w-xl mx-auto">
+              64 teams. Your boss doesn't need to know you're watching.
+              Block your calendar with fake meetings and enjoy the madness.
+            </p>
+
+            <Link
+              href="/bracket"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-all uppercase tracking-wider shadow-lg hover:shadow-[0_0_30px_rgba(255,150,0,0.4)]"
+            >
+              <Calendar className="w-5 h-5" />
+              View Bracket & Block Calendar
+              <ChevronRight className="w-5 h-5" />
+            </Link>
+          </div>
         </section>
 
         {/* ===== HOW IT WORKS ===== */}
@@ -346,13 +309,20 @@ export default function Home() {
         <section className="py-20 px-4 bg-[var(--arena-frame)] border-t border-black/50 relative">
           <div className="absolute inset-0 bg-scanlines opacity-5 pointer-events-none"></div>
           <div className="max-w-2xl mx-auto text-center relative z-10">
-            <h2 className="text-3xl md:text-5xl font-bold mb-8 uppercase font-[var(--font-oswald)]">
-              <span className="text-white led-text-white">Ready to </span>
-              <span className="text-[var(--led-amber)] led-text">Block</span>
-              <span className="text-white led-text-white"> Your Bracket?</span>
+            <h2 className="text-3xl md:text-5xl font-bold mb-4 uppercase font-[var(--font-oswald)]">
+              <span className="text-white led-text-white">Block Your </span>
+              <span className="text-[var(--led-amber)] led-text">Calendar Now</span>
             </h2>
-            <Link href="/bracket" className="inline-block bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold text-lg md:text-xl px-10 py-4 rounded-lg uppercase tracking-wider font-[var(--font-oswald)] transition-all shadow-lg hover:shadow-[0_0_30px_rgba(255,150,0,0.5)] cursor-pointer">
-              Start Now
+            <p className="text-zinc-400 mb-8 max-w-md mx-auto">
+              The bracket is live. Pick your games and generate fake meetings before your boss schedules something.
+            </p>
+            <Link
+              href="/bracket"
+              className="inline-flex items-center gap-2 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold text-lg md:text-xl px-10 py-4 rounded-lg uppercase tracking-wider font-[var(--font-oswald)] transition-all shadow-lg hover:shadow-[0_0_30px_rgba(255,150,0,0.5)] cursor-pointer"
+            >
+              <Calendar className="w-5 h-5" />
+              View Bracket
+              <ChevronRight className="w-5 h-5" />
             </Link>
             <p className="mt-8 text-zinc-500 text-sm">
               © 2026 Bracket Blocker. Not affiliated with the NCAA.

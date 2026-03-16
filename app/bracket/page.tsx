@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from 'react';
-import { ChevronRight, Filter, X, Bell, Check, Calendar } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { Filter, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 /* ==========================================
@@ -21,17 +22,17 @@ const ROUNDS = [
   { name: 'Championship', shortName: 'CHIP', gamesPerRegion: 0.25 },
 ];
 
-// Placeholder game structure
+// Game structure
 type Game = {
   id: string;
   round: string;
   region: string;
-  team1: { name: string; seed: number; conference: string } | null;
-  team2: { name: string; seed: number; conference: string } | null;
+  team1: { name: string; seed: number; conference: string; score?: number } | null;
+  team2: { name: string; seed: number; conference: string; score?: number } | null;
   date: string | null;
   time: string | null;
   location: string | null;
-  selected: boolean;
+  status: 'scheduled' | 'in_progress' | 'final';
 };
 
 // Generate placeholder games for the bracket
@@ -51,7 +52,7 @@ function generatePlaceholderBracket(): Game[] {
         date: 'March 20-21',
         time: 'TBD',
         location: 'TBD',
-        selected: false,
+        status: 'scheduled',
       });
     }
     // Round of 32: 4 games per region
@@ -65,7 +66,7 @@ function generatePlaceholderBracket(): Game[] {
         date: 'March 22-23',
         time: 'TBD',
         location: 'TBD',
-        selected: false,
+        status: 'scheduled',
       });
     }
     // Sweet 16: 2 games per region
@@ -79,7 +80,7 @@ function generatePlaceholderBracket(): Game[] {
         date: 'March 27-28',
         time: 'TBD',
         location: 'TBD',
-        selected: false,
+        status: 'scheduled',
       });
     }
     // Elite 8: 1 game per region
@@ -92,7 +93,7 @@ function generatePlaceholderBracket(): Game[] {
       date: 'March 29-30',
       time: 'TBD',
       location: 'TBD',
-      selected: false,
+      status: 'scheduled',
     });
   });
 
@@ -106,7 +107,7 @@ function generatePlaceholderBracket(): Game[] {
     date: 'April 4',
     time: 'TBD',
     location: 'San Antonio, TX',
-    selected: false,
+    status: 'scheduled',
   });
   games.push({
     id: `game-${gameId++}`,
@@ -117,7 +118,7 @@ function generatePlaceholderBracket(): Game[] {
     date: 'April 4',
     time: 'TBD',
     location: 'San Antonio, TX',
-    selected: false,
+    status: 'scheduled',
   });
 
   // Championship
@@ -130,139 +131,93 @@ function generatePlaceholderBracket(): Game[] {
     date: 'April 6',
     time: 'TBD',
     location: 'San Antonio, TX',
-    selected: false,
+    status: 'scheduled',
   });
 
   return games;
 }
 
 /* ==========================================
-   SELECTION SUNDAY COUNTDOWN
+   LIVE BANNER
    ========================================== */
 
-function SelectionSundayBanner() {
-  const selectionSunday = new Date('2026-03-15T18:00:00-04:00');
-  const now = new Date();
-  const diff = selectionSunday.getTime() - now.getTime();
-  const days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
-
-  const scrollToReminder = () => {
-    document.getElementById('selection-reminder')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+function LiveBanner({ isLoading, lastUpdated, onRefresh, gameCount }: {
+  isLoading: boolean;
+  lastUpdated: Date | null;
+  onRefresh: () => void;
+  gameCount: number;
+}) {
   return (
-    <div className="bg-gradient-to-r from-[var(--led-amber)]/20 via-[var(--led-amber)]/10 to-[var(--led-amber)]/20 border border-[var(--led-amber)]/30 rounded-xl p-8 mb-8">
-      <div className="flex flex-col items-center text-center gap-5">
-        <div>
-          <div className="flex items-center gap-2 justify-center mb-3">
-            <span className="w-2 h-2 rounded-full bg-[var(--led-amber)] animate-pulse"></span>
-            <span className="text-xs uppercase tracking-widest text-[var(--led-amber)] font-bold">
-              Selection Sunday
+    <div className="bg-gradient-to-r from-green-500/20 via-green-500/10 to-green-500/20 border border-green-500/30 rounded-xl p-6 mb-8">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
+            <span className="text-lg font-bold text-green-400 uppercase tracking-wider font-[var(--font-oswald)]">
+              Bracket is LIVE!
             </span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold font-[var(--font-oswald)] text-white mb-2">
-            Bracket Reveal in <span className="text-[var(--led-amber)]">{days} Days</span>
-          </h2>
-          <p className="text-zinc-400 text-sm">
-            March 15, 2026 at 6:00 PM ET • Teams & matchups will be announced
-          </p>
+          <span className="text-sm text-zinc-400">
+            {gameCount} games
+          </span>
+          {lastUpdated && (
+            <span className="text-xs text-zinc-500 hidden sm:inline">
+              • Updated {lastUpdated.toLocaleTimeString()}
+            </span>
+          )}
         </div>
         <button
-          onClick={scrollToReminder}
-          className="flex items-center gap-2 px-6 py-3 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-all uppercase tracking-wider text-sm shadow-lg hover:shadow-[0_0_20px_rgba(255,150,0,0.4)]"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors text-sm"
         >
-          <Calendar className="w-4 h-4" />
-          Add Reminder to Calendar
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          {isLoading ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
     </div>
   );
 }
 
-/* ==========================================
-   EMAIL CAPTURE
-   ========================================== */
-
-function SelectionSundayReminder() {
-  // Selection Sunday: March 15, 2026 at 6:00 PM ET
-  const eventTitle = "NCAA Tournament Bracket is LIVE - Block Your Calendar!";
-  const eventDescription = `The 2026 NCAA Tournament bracket has been announced!
-
-Go to Bracket Blocker now to block your calendar before your boss schedules meetings during the games:
-https://bracketblocker.com/bracket
-
-First games tip off Thursday. Don't wait!`;
-
-  const startDate = "20260315T180000";  // 6:00 PM ET
-  const endDate = "20260315T183000";    // 6:30 PM (30 min reminder)
-
-  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(eventDescription)}&ctz=America/New_York`;
-
-  const outlookUrl = `https://outlook.live.com/calendar/0/action/compose?subject=${encodeURIComponent(eventTitle)}&body=${encodeURIComponent(eventDescription)}&startdt=2026-03-15T18:00:00-04:00&enddt=2026-03-15T18:30:00-04:00`;
-
-  return (
-    <div className="bg-[var(--arena-panel)] border border-white/10 rounded-xl p-8">
-      <div className="max-w-xl mx-auto text-center">
-        <Bell className="w-10 h-10 text-[var(--led-amber)] mx-auto mb-4" />
-        <h3 className="text-2xl font-bold text-white mb-2 font-[var(--font-oswald)] uppercase">
-          Don't Miss Selection Sunday
-        </h3>
-        <p className="text-zinc-400 mb-2">
-          March 15, 2026 at 6:00 PM ET
-        </p>
-        <p className="text-zinc-500 text-sm mb-6">
-          Add a reminder to your calendar. When the bracket drops, you'll be ready to block your schedule.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a
-            href={googleUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-3 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-colors uppercase tracking-wider flex items-center justify-center gap-2"
-          >
-            <Calendar className="w-4 h-4" />
-            Google Calendar
-          </a>
-          <a
-            href={outlookUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-3 bg-zinc-700 hover:bg-zinc-600 text-white font-bold rounded-lg transition-colors uppercase tracking-wider flex items-center justify-center gap-2"
-          >
-            <Calendar className="w-4 h-4" />
-            Outlook
-          </a>
-        </div>
-
-        <p className="text-xs text-zinc-600 mt-4">
-          You'll get a calendar reminder when the bracket is announced.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 /* ==========================================
    PLACEHOLDER GAME CARD
    ========================================== */
 
-function PlaceholderGameCard({ game, onClick }: { game: Game; onClick: () => void }) {
-  const isAvailable = game.team1 !== null && game.team2 !== null;
+function GameCard({ game, onClick }: { game: Game; onClick: () => void }) {
+  const hasTeams = game.team1 !== null && game.team2 !== null;
+  const teamsKnown = hasTeams && game.team1?.name !== 'TBD' && game.team2?.name !== 'TBD';
+  const isAvailable = hasTeams && teamsKnown;
+  const isGameOver = game.status === 'final';
+  const isLive = game.status === 'in_progress';
+  const canClick = isAvailable && !isGameOver;
 
   return (
     <div
-      onClick={isAvailable ? onClick : undefined}
+      onClick={canClick ? onClick : undefined}
       className={`relative p-4 rounded-lg border transition-all ${
-        isAvailable
-          ? game.selected
-            ? 'border-[var(--led-amber)] bg-[var(--led-amber)]/10 cursor-pointer'
-            : 'border-zinc-700 bg-[#111115] hover:border-zinc-600 cursor-pointer'
-          : 'border-zinc-800 bg-[#0a0a0c] cursor-not-allowed opacity-60'
+        isGameOver
+          ? 'border-zinc-800 bg-[#0a0a0c] opacity-60 cursor-not-allowed'
+          : isAvailable
+            ? 'border-zinc-700 bg-[#111115] hover:border-[var(--led-amber)] hover:bg-[var(--led-amber)]/5 cursor-pointer'
+            : 'border-zinc-800 bg-[#0a0a0c] cursor-not-allowed opacity-60'
       }`}
     >
+      {/* Status badge */}
+      {isLive && (
+        <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/20 border border-red-500/30">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+          <span className="text-[10px] text-red-400 font-bold uppercase">Live</span>
+        </div>
+      )}
+      {isGameOver && (
+        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-zinc-700">
+          <span className="text-[10px] text-zinc-400 font-bold uppercase">Final</span>
+        </div>
+      )}
+
       {/* Teams */}
-      <div className="space-y-2 mb-3">
+      <div className={`space-y-2 mb-3 ${isLive || isGameOver ? 'mt-6' : ''}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-xs text-zinc-500">
@@ -272,6 +227,9 @@ function PlaceholderGameCard({ game, onClick }: { game: Game; onClick: () => voi
               {game.team1?.name || 'TBD'}
             </span>
           </div>
+          {(isLive || isGameOver) && game.team1?.score !== undefined && (
+            <span className="text-sm font-bold text-white">{game.team1.score}</span>
+          )}
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -282,25 +240,21 @@ function PlaceholderGameCard({ game, onClick }: { game: Game; onClick: () => voi
               {game.team2?.name || 'TBD'}
             </span>
           </div>
+          {(isLive || isGameOver) && game.team2?.score !== undefined && (
+            <span className="text-sm font-bold text-white">{game.team2.score}</span>
+          )}
         </div>
       </div>
 
       {/* Game info */}
       <div className="text-xs text-zinc-500">
-        {game.date} • {game.time}
+        {isGameOver ? 'Game Over' : `${game.date} • ${game.time}`}
       </div>
-
-      {/* Selected indicator */}
-      {game.selected && (
-        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[var(--led-amber)] flex items-center justify-center">
-          <Check className="w-3 h-3 text-black" />
-        </div>
-      )}
 
       {/* Coming soon overlay for TBD games */}
       {!isAvailable && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#0a0a0c]/90 rounded-lg">
-          <span className="text-xs text-zinc-500 uppercase tracking-wider">Selection Sunday</span>
+          <span className="text-xs text-zinc-500 uppercase tracking-wider">Awaiting Results</span>
         </div>
       )}
     </div>
@@ -323,7 +277,7 @@ function RoundColumn({ roundName, games, onGameClick }: {
       </h3>
       <div className="space-y-3">
         {games.map(game => (
-          <PlaceholderGameCard
+          <GameCard
             key={game.id}
             game={game}
             onClick={() => onGameClick(game.id)}
@@ -335,22 +289,101 @@ function RoundColumn({ roundName, games, onGameClick }: {
 }
 
 /* ==========================================
+   API RESPONSE TYPE
+   ========================================== */
+
+type APIGame = {
+  id: string;
+  team1: { id: string; name: string; abbreviation: string; seed: number };
+  team2: { id: string; name: string; abbreviation: string; seed: number };
+  date: string;
+  time: string;
+  location: string;
+  status: 'scheduled' | 'in_progress' | 'final';
+  score: { team1: number; team2: number } | null;
+  round: string;
+  region: string;
+};
+
+/* ==========================================
    MAIN BRACKET PAGE
    ========================================== */
 
 export default function BracketPage() {
+  const router = useRouter();
   const [games, setGames] = useState<Game[]>(generatePlaceholderBracket);
   const [activeRegion, setActiveRegion] = useState<typeof REGIONS[number] | 'All'>('All');
   const [activeRound, setActiveRound] = useState<string | 'All'>('All');
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const selectedGames = games.filter(g => g.selected);
+  // Fetch games from API
+  const fetchGames = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/games?tournament=true&season=2026');
+      const data = await res.json();
 
-  const toggleGameSelection = (gameId: string) => {
-    setGames(prev =>
-      prev.map(g =>
-        g.id === gameId ? { ...g, selected: !g.selected } : g
-      )
-    );
+      if (data.success && data.games && data.games.length > 0) {
+        // Transform API games to our format
+        const transformedGames: Game[] = data.games.map((apiGame: APIGame) => ({
+          id: apiGame.id,
+          round: apiGame.round,
+          region: apiGame.region,
+          team1: {
+            name: apiGame.team1.name,
+            seed: apiGame.team1.seed,
+            conference: '',
+            score: apiGame.score?.team1,
+          },
+          team2: {
+            name: apiGame.team2.name,
+            seed: apiGame.team2.seed,
+            conference: '',
+            score: apiGame.score?.team2,
+          },
+          date: apiGame.date,
+          time: apiGame.time,
+          location: apiGame.location,
+          status: apiGame.status,
+        }));
+
+        setGames(transformedGames);
+      }
+      // If no games returned, keep showing placeholder
+
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      // Keep showing placeholder on error
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch games on mount and auto-refresh every 5 minutes
+  useEffect(() => {
+    fetchGames();
+
+    const interval = setInterval(fetchGames, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchGames]);
+
+  
+  const handleGameClick = (gameId: string) => {
+    const game = games.find(g => g.id === gameId);
+    if (!game || !game.team1 || !game.team2) return;
+
+    // Navigate to checkout with game data
+    const params = new URLSearchParams({
+      id: game.id,
+      team1: game.team1.name,
+      team2: game.team2.name,
+      date: game.date || '',
+      time: game.time || '',
+    });
+    router.push(`/checkout?${params.toString()}`);
   };
 
   // Filter games by region and round
@@ -387,20 +420,15 @@ export default function BracketPage() {
               </h1>
             </div>
 
-            {/* Selected games count */}
-            {selectedGames.length > 0 && (
-              <Link
-                href={`/checkout?games=${selectedGames.map(g => g.id).join(',')}`}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--led-amber)] hover:bg-[var(--led-amber-glow)] text-black font-bold rounded-lg transition-colors"
-              >
-                <span>{selectedGames.length} Game{selectedGames.length > 1 ? 's' : ''}</span>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            )}
-          </div>
+                      </div>
 
-          {/* Selection Sunday Banner */}
-          <SelectionSundayBanner />
+          {/* Live Banner */}
+          <LiveBanner
+            isLoading={isLoading}
+            lastUpdated={lastUpdated}
+            onRefresh={fetchGames}
+            gameCount={games.filter(g => g.team1 !== null).length}
+          />
 
           {/* Filters */}
           <div className="flex flex-wrap gap-4 mb-8">
@@ -440,17 +468,7 @@ export default function BracketPage() {
               </select>
             </div>
 
-            {/* Clear selection */}
-            {selectedGames.length > 0 && (
-              <button
-                onClick={() => setGames(prev => prev.map(g => ({ ...g, selected: false })))}
-                className="flex items-center gap-1 px-3 py-1 text-sm text-zinc-400 hover:text-white transition-colors"
-              >
-                <X className="w-3 h-3" />
-                Clear selection
-              </button>
-            )}
-          </div>
+                      </div>
 
           {/* Bracket Grid */}
           <div className="overflow-x-auto pb-4 mb-12">
@@ -463,23 +481,18 @@ export default function BracketPage() {
                     key={round.name}
                     roundName={round.name}
                     games={roundGames}
-                    onGameClick={toggleGameSelection}
+                    onGameClick={handleGameClick}
                   />
                 );
               })}
             </div>
           </div>
 
-          {/* Selection Sunday Reminder */}
-          <div id="selection-reminder">
-            <SelectionSundayReminder />
-          </div>
-
           {/* Info text */}
           <p className="text-center text-zinc-600 text-sm mt-8">
-            Games and times will be populated after Selection Sunday (March 15, 2026).
-            <br />
             Click on games to add them to your calendar block list.
+            <br />
+            <span className="text-zinc-500">Page auto-refreshes every few minutes.</span>
           </p>
 
         </div>

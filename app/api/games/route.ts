@@ -1,65 +1,50 @@
 import { NextResponse } from 'next/server';
-import { getTournamentGames, getGames, formatGameDateTime, inferTournamentRound } from '@/lib/balldontlie';
+import { getTournamentGames } from '@/lib/mockTournament';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const season = searchParams.get('season') || '2026';
   const tournament = searchParams.get('tournament') === 'true';
 
   try {
-    let games;
-
     if (tournament) {
-      // Get March Madness tournament games
-      games = await getTournamentGames(parseInt(season));
-    } else {
-      // Get games by date range or team
-      const startDate = searchParams.get('start_date') || undefined;
-      const endDate = searchParams.get('end_date') || undefined;
-      const teamIds = searchParams.get('team_ids')?.split(',').map(Number) || undefined;
+      // Get March Madness tournament games (mock data)
+      const games = getTournamentGames();
 
-      games = await getGames({
-        season: parseInt(season),
-        startDate,
-        endDate,
-        teamIds,
+      const formattedGames = games.map(game => ({
+        id: game.id,
+        team1: {
+          id: game.id + '-t1',
+          name: game.team1.name,
+          abbreviation: game.team1.abbreviation,
+          seed: game.team1.seed,
+        },
+        team2: {
+          id: game.id + '-t2',
+          name: game.team2.name,
+          abbreviation: game.team2.abbreviation,
+          seed: game.team2.seed,
+        },
+        date: game.date,
+        time: game.time,
+        location: game.location,
+        status: game.status,
+        score: game.score || null,
+        round: game.round,
+        region: game.region,
+      }));
+
+      return NextResponse.json({
+        success: true,
+        games: formattedGames,
+        count: formattedGames.length,
       });
     }
 
-    // Format games for frontend consumption
-    const formattedGames = games.map(game => {
-      const { date, time } = formatGameDateTime(game);
-      return {
-        id: game.id,
-        team1: {
-          id: game.home_team.id,
-          name: game.home_team.name,
-          abbreviation: game.home_team.abbreviation,
-          conference: game.home_team.conference?.name || 'Unknown',
-        },
-        team2: {
-          id: game.visitor_team.id,
-          name: game.visitor_team.name,
-          abbreviation: game.visitor_team.abbreviation,
-          conference: game.visitor_team.conference?.name || 'Unknown',
-        },
-        date,
-        time,
-        dateRaw: game.date,
-        status: game.status,
-        score: game.status === 'final' ? {
-          home: game.home_team_score,
-          visitor: game.visitor_team_score,
-        } : null,
-        round: game.round || inferTournamentRound(game.date),
-        postseason: game.postseason || false,
-      };
-    });
-
+    // Non-tournament games not implemented
     return NextResponse.json({
       success: true,
-      games: formattedGames,
-      count: formattedGames.length,
+      games: [],
+      count: 0,
     });
   } catch (error) {
     console.error('Error fetching games:', error);
