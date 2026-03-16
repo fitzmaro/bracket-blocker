@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getTournamentGames } from '@/lib/mockTournament';
+import { getBracketState } from '@/lib/bracketState';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -7,8 +8,11 @@ export async function GET(request: Request) {
 
   try {
     if (tournament) {
-      // Get March Madness tournament games (mock data)
-      const games = getTournamentGames();
+      // Try to get live bracket state from Vercel KV first
+      const bracketState = await getBracketState();
+
+      // Use bracket state if available, otherwise fall back to initial mock data
+      const games = bracketState ? bracketState.games : getTournamentGames();
 
       const formattedGames = games.map(game => ({
         id: game.id,
@@ -31,12 +35,14 @@ export async function GET(request: Request) {
         score: game.score || null,
         round: game.round,
         region: game.region,
+        winner: 'winner' in game ? game.winner : undefined,
       }));
 
       return NextResponse.json({
         success: true,
         games: formattedGames,
         count: formattedGames.length,
+        lastUpdated: bracketState?.lastUpdated || null,
       });
     }
 

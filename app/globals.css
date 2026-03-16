@@ -34,6 +34,10 @@
    BASE STYLES
    ========================================== */
 
+html {
+  scroll-behavior: smooth;
+}
+
 html, body {
   background-color: var(--arena-black);
   color: var(--led-white);
@@ -260,6 +264,9 @@ html, body {
   border: 2px solid rgba(255, 150, 0, 0.5);
   border-radius: 6px;
   transition: all 0.2s ease;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 999;
 }
 
 .btn-glow:hover {
